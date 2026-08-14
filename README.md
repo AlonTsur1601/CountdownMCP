@@ -8,6 +8,8 @@ It reports a percentage in the context of the actual plan (`plus`, `pro`, and ot
 
 CountdownMCP complements [TodoMCP](https://github.com/AlonTsur1601/TodoMCP), but both servers remain fully independent and useful on their own.
 
+Codex should skip CountdownMCP for small, self-contained, low-risk tasks that can reasonably finish in one short turn. Usage checks and scheduling advice are intended for large or multi-stage work where the remaining limit can affect scope or execution order.
+
 ## What it does
 
 - Reads live ChatGPT/Codex rate-limit data through the local Codex app-server.

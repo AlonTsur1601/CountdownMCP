@@ -8,6 +8,7 @@ import { UsageProvider } from "./usage-provider.js";
 import type { UsageSnapshot, WorkTask } from "./types.js";
 
 const SERVER_INSTRUCTIONS = [
+  "Do not call CountdownMCP for small, self-contained, low-risk tasks that can reasonably finish in one short turn; execute them directly.",
   "For large or multi-stage work, call countdown_get_usage before choosing scope.",
   "Use countdown_advise_work with TodoMCP WorkCandidate v1 tasks when candidates are available.",
   "Do not poll usage repeatedly; responses are cached briefly.",
@@ -99,7 +100,7 @@ export function createServer(provider: UsageReader = new UsageProvider()): { ser
     "countdown_get_usage",
     {
       title: "Get Codex usage",
-      description: "Use this before large or multi-stage work to read the current Codex plan, remaining usage, reset window, credits, and limit state.",
+      description: "Use this before large or multi-stage work to read the current Codex plan, remaining usage, reset window, credits, and limit state. Do not call it for small, self-contained tasks that can finish in one short turn.",
       inputSchema: {},
       outputSchema: usageOutputSchema,
       annotations: {
@@ -129,7 +130,7 @@ export function createServer(provider: UsageReader = new UsageProvider()): { ser
     "countdown_advise_work",
     {
       title: "Advise which work to do",
-      description: "Use this with TodoMCP WorkCandidate v1 tasks to rank ready work against the current Codex usage window. Advisory only; it does not store tasks or override dependencies.",
+      description: "Use this with TodoMCP WorkCandidate v1 tasks for large or multi-stage work. Do not call it for small, self-contained tasks that can finish in one short turn. Advisory only; it does not store tasks or override dependencies.",
       inputSchema: {
         currentTaskId: z.string().min(1).max(100).optional(),
         tasks: z.array(workCandidateSchema).min(1).max(1_000),
