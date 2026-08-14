@@ -8,7 +8,7 @@ It reports a percentage in the context of the actual plan (`plus`, `pro`, and ot
 
 CountdownMCP complements [TodoMCP](https://github.com/AlonTsur1601/TodoMCP), but both servers remain fully independent and useful on their own.
 
-Codex should skip CountdownMCP for small, self-contained, low-risk tasks that can reasonably finish in one short turn. Usage checks and scheduling advice are intended for large or multi-stage work where the remaining limit can affect scope or execution order.
+Codex should skip CountdownMCP for small, self-contained, low-risk tasks that can reasonably finish in one short turn. It should check usage once before work expected to take more than 10 minutes, require at least three meaningful execution steps, involve repeated implementation-and-test cycles, or be explicitly described as continuing across multiple substantial prompts.
 
 ## What it does
 

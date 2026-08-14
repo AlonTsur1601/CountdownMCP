@@ -29,9 +29,13 @@ describe("CountdownMCP server", () => {
     const result = await client.listTools();
     expect(result.tools.map((tool) => tool.name)).toEqual(["countdown_get_usage", "countdown_advise_work"]);
     expect(client.getInstructions()).toContain("Do not call CountdownMCP for small");
+    expect(client.getInstructions()).toContain("more than 10 minutes");
+    expect(client.getInstructions()).toContain("at least three meaningful execution steps");
+    expect(client.getInstructions()).toContain("multiple substantial prompts");
     for (const tool of result.tools) {
       expect(tool.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false, openWorldHint: false });
       expect(tool.description).toContain("Do not call it for small");
+      expect(tool.description).toContain("more than 10 minutes");
     }
   });
 

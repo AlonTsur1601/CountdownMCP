@@ -9,7 +9,7 @@ import type { UsageSnapshot, WorkTask } from "./types.js";
 
 const SERVER_INSTRUCTIONS = [
   "Do not call CountdownMCP for small, self-contained, low-risk tasks that can reasonably finish in one short turn; execute them directly.",
-  "For large or multi-stage work, call countdown_get_usage before choosing scope.",
+  "Call countdown_get_usage once before work expected to take more than 10 minutes, require at least three meaningful execution steps, involve repeated implementation-and-test cycles, or be explicitly described as continuing across multiple substantial prompts.",
   "Use countdown_advise_work with TodoMCP WorkCandidate v1 tasks when candidates are available.",
   "Do not poll usage repeatedly; responses are cached briefly.",
   "At 0% remaining, do not stop an active turn solely because the limit is exhausted: continue safe work that needs no new user message, verify a checkpoint, and preserve an exact continuation point.",
@@ -100,7 +100,7 @@ export function createServer(provider: UsageReader = new UsageProvider()): { ser
     "countdown_get_usage",
     {
       title: "Get Codex usage",
-      description: "Use this before large or multi-stage work to read the current Codex plan, remaining usage, reset window, credits, and limit state. Do not call it for small, self-contained tasks that can finish in one short turn.",
+      description: "Call this once before work expected to take more than 10 minutes, require at least three meaningful execution steps, involve repeated implementation-and-test cycles, or continue across multiple substantial prompts. It returns the current Codex plan, remaining usage, reset window, credits, and limit state. Do not call it for small, self-contained tasks that can finish in one short turn.",
       inputSchema: {},
       outputSchema: usageOutputSchema,
       annotations: {
@@ -130,7 +130,7 @@ export function createServer(provider: UsageReader = new UsageProvider()): { ser
     "countdown_advise_work",
     {
       title: "Advise which work to do",
-      description: "Use this with TodoMCP WorkCandidate v1 tasks for large or multi-stage work. Do not call it for small, self-contained tasks that can finish in one short turn. Advisory only; it does not store tasks or override dependencies.",
+      description: "Use this with TodoMCP WorkCandidate v1 tasks when work meets the CountdownMCP threshold: more than 10 minutes, at least three meaningful execution steps, repeated implementation-and-test cycles, or multiple substantial prompts. Do not call it for small, self-contained tasks that can finish in one short turn. Advisory only; it does not store tasks or override dependencies.",
       inputSchema: {
         currentTaskId: z.string().min(1).max(100).optional(),
         tasks: z.array(workCandidateSchema).min(1).max(1_000),
