@@ -126,4 +126,4 @@ Pushing a tag that exactly matches the version in `package.json` (for example, `
 
 ## License
 
-MIT
+[MIT License](LICENSE)
