@@ -1,0 +1,35 @@
+{
+  "name": "countdown-mcp",
+  "version": "0.1.0",
+  "description": "A local MCP server that helps Codex understand its remaining usage and prioritize work.",
+  "type": "module",
+  "bin": {
+    "countdown-mcp": "dist/server.js"
+  },
+  "files": [
+    "dist",
+    "install.mjs",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "node dist/smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "license": "MIT"
+}
