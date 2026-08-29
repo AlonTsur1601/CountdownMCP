@@ -56,8 +56,8 @@ describe("normalizeUsage", () => {
       rateLimits: {
         limitId: "codex",
         planType: "plus",
-        primary: { usedPercent: 84, windowDurationMins: 10_080 },
-        secondary: { usedPercent: 20, windowDurationMins: 300 },
+        primary: { usedPercent: 88, windowDurationMins: 10_080 },
+        secondary: { usedPercent: 25, windowDurationMins: 300 },
       },
     }, { source: "app_server", nowMs: 1_000 });
 
@@ -67,8 +67,8 @@ describe("normalizeUsage", () => {
       rateLimits: {
         limitId: "codex",
         planType: "plus",
-        primary: { usedPercent: 85, windowDurationMins: 10_080 },
-        secondary: { usedPercent: 20, windowDurationMins: 300 },
+        primary: { usedPercent: 89, windowDurationMins: 10_080 },
+        secondary: { usedPercent: 25, windowDurationMins: 300 },
       },
     }, { source: "app_server", nowMs: 1_000 });
     expect(lowerWeeklyCapacity.buckets.codex.effectiveWindow).toBe("primary");

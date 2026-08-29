@@ -14,7 +14,7 @@ Codex should skip CountdownMCP for small, self-contained, low-risk tasks that ca
 
 - Reads live ChatGPT/Codex rate-limit data through the local Codex app-server.
 - Reports plan, used and remaining percentages, all returned windows, reset time, credits, and limit state.
-- Compares the five-hour and weekly windows by estimated remaining capacity rather than treating equal percentages as equal quota. The weekly allowance is conservatively estimated as five five-hour allowances until Codex exposes an authoritative absolute ratio.
+- Compares the five-hour and weekly windows by estimated remaining capacity rather than treating equal percentages as equal quota. Based on measurements after the August 2026 restoration of the Plus five-hour limit, a full five-hour allowance is estimated as 16% of the weekly allowance (about 6.25 full five-hour allowances per week).
 - Falls back to the latest local rate-limit metadata when app-server access is unavailable. Fallback results are explicitly marked with their source and staleness.
 - Advises which ready tasks to run in normal, guarded, critical, and exhausted usage states.
 - Keeps an active, continuation-safe task eligible even at 0% remaining, because an already-running Codex turn can often continue without a new user message.

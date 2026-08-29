@@ -16,11 +16,10 @@ const KNOWN_PLANS = new Set<PlanType>([
 
 const FIVE_HOUR_WINDOW_MINUTES = 300;
 const WEEKLY_WINDOW_MINUTES = 10_080;
-// Codex exposes percentages but not absolute quota sizes. Current observed
-// Plus/Pro behavior puts the weekly allowance at roughly 4-6.7 five-hour
-// allowances, so use a conservative midpoint until the app-server exposes an
-// authoritative capacity ratio.
-const ESTIMATED_WEEKLY_CAPACITY_IN_FIVE_HOUR_WINDOWS = 5;
+// Codex exposes percentages but not absolute quota sizes. Measurements after
+// the August 2026 restoration of the Plus five-hour limit consistently put one
+// full five-hour allowance at about 16% of the weekly allowance.
+const FIVE_HOUR_CAPACITY_AS_WEEKLY_PERCENT = 16;
 
 function clampPercent(value: unknown): number {
   if (typeof value !== "number" || !Number.isFinite(value)) return 0;
@@ -64,10 +63,11 @@ function selectEffectiveWindow(
   const fiveHour = windows.find(({ value }) => value.durationMinutes === FIVE_HOUR_WINDOW_MINUTES);
   const weekly = windows.find(({ value }) => value.durationMinutes === WEEKLY_WINDOW_MINUTES);
   if (fiveHour && weekly) {
-    const fiveHourRemaining = fiveHour.value.remainingPercent;
-    const weeklyRemainingEstimate = weekly.value.remainingPercent
-      * ESTIMATED_WEEKLY_CAPACITY_IN_FIVE_HOUR_WINDOWS;
-    return weeklyRemainingEstimate < fiveHourRemaining ? weekly.key : fiveHour.key;
+    const fiveHourRemainingAsWeeklyPercent = fiveHour.value.remainingPercent
+      * FIVE_HOUR_CAPACITY_AS_WEEKLY_PERCENT / 100;
+    return weekly.value.remainingPercent < fiveHourRemainingAsWeeklyPercent
+      ? weekly.key
+      : fiveHour.key;
   }
 
   return primary.usedPercent >= secondary.usedPercent ? "primary" : "secondary";
