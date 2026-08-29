@@ -14,6 +14,14 @@ const KNOWN_PLANS = new Set<PlanType>([
   "enterprise_cbp_usage_based", "enterprise", "edu", "unknown",
 ]);
 
+const FIVE_HOUR_WINDOW_MINUTES = 300;
+const WEEKLY_WINDOW_MINUTES = 10_080;
+// Codex exposes percentages but not absolute quota sizes. Current observed
+// Plus/Pro behavior puts the weekly allowance at roughly 4-6.7 five-hour
+// allowances, so use a conservative midpoint until the app-server exposes an
+// authoritative capacity ratio.
+const ESTIMATED_WEEKLY_CAPACITY_IN_FIVE_HOUR_WINDOWS = 5;
+
 function clampPercent(value: unknown): number {
   if (typeof value !== "number" || !Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -42,12 +50,33 @@ function normalizeWindow(raw: RawRateLimitWindow | null | undefined, nowMs: numb
   };
 }
 
+function selectEffectiveWindow(
+  primary: UsageWindow | null,
+  secondary: UsageWindow | null,
+): "primary" | "secondary" | null {
+  if (!primary) return secondary ? "secondary" : null;
+  if (!secondary) return "primary";
+
+  const windows = [
+    { key: "primary" as const, value: primary },
+    { key: "secondary" as const, value: secondary },
+  ];
+  const fiveHour = windows.find(({ value }) => value.durationMinutes === FIVE_HOUR_WINDOW_MINUTES);
+  const weekly = windows.find(({ value }) => value.durationMinutes === WEEKLY_WINDOW_MINUTES);
+  if (fiveHour && weekly) {
+    const fiveHourRemaining = fiveHour.value.remainingPercent;
+    const weeklyRemainingEstimate = weekly.value.remainingPercent
+      * ESTIMATED_WEEKLY_CAPACITY_IN_FIVE_HOUR_WINDOWS;
+    return weeklyRemainingEstimate < fiveHourRemaining ? weekly.key : fiveHour.key;
+  }
+
+  return primary.usedPercent >= secondary.usedPercent ? "primary" : "secondary";
+}
+
 function normalizeBucket(raw: RawRateLimitSnapshot, fallbackId: string, nowMs: number): UsageBucket {
   const primary = normalizeWindow(raw.primary, nowMs);
   const secondary = normalizeWindow(raw.secondary, nowMs);
-  const effectiveWindow = primary && secondary
-    ? (primary.usedPercent >= secondary.usedPercent ? "primary" : "secondary")
-    : primary ? "primary" : secondary ? "secondary" : null;
+  const effectiveWindow = selectEffectiveWindow(primary, secondary);
   const effective = effectiveWindow === "primary" ? primary : effectiveWindow === "secondary" ? secondary : null;
   const rawCredits = raw.credits;
   return {

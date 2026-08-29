@@ -35,6 +35,58 @@ describe("normalizeUsage", () => {
     expect(result.resetCreditsAvailable).toBe(2);
   });
 
+  it("compares five-hour and weekly windows by estimated remaining capacity", () => {
+    const result = normalizeUsage({
+      rateLimits: {
+        limitId: "codex",
+        planType: "plus",
+        primary: { usedPercent: 20, windowDurationMins: 300 },
+        secondary: { usedPercent: 80, windowDurationMins: 10_080 },
+      },
+    }, { source: "app_server", nowMs: 1_000 });
+
+    expect(result.buckets.codex.primary?.remainingPercent).toBe(80);
+    expect(result.buckets.codex.secondary?.remainingPercent).toBe(20);
+    expect(result.buckets.codex.effectiveWindow).toBe("primary");
+    expect(result.remainingPercent).toBe(80);
+  });
+
+  it("selects the weekly window only when its estimated capacity is strictly lower", () => {
+    const result = normalizeUsage({
+      rateLimits: {
+        limitId: "codex",
+        planType: "plus",
+        primary: { usedPercent: 84, windowDurationMins: 10_080 },
+        secondary: { usedPercent: 20, windowDurationMins: 300 },
+      },
+    }, { source: "app_server", nowMs: 1_000 });
+
+    expect(result.buckets.codex.effectiveWindow).toBe("secondary");
+
+    const lowerWeeklyCapacity = normalizeUsage({
+      rateLimits: {
+        limitId: "codex",
+        planType: "plus",
+        primary: { usedPercent: 85, windowDurationMins: 10_080 },
+        secondary: { usedPercent: 20, windowDurationMins: 300 },
+      },
+    }, { source: "app_server", nowMs: 1_000 });
+    expect(lowerWeeklyCapacity.buckets.codex.effectiveWindow).toBe("primary");
+  });
+
+  it("falls back to percentage comparison for unknown window durations", () => {
+    const result = normalizeUsage({
+      rateLimits: {
+        limitId: "codex",
+        planType: "plus",
+        primary: { usedPercent: 25, windowDurationMins: 60 },
+        secondary: { usedPercent: 60, windowDurationMins: 1_440 },
+      },
+    }, { source: "app_server", nowMs: 1_000 });
+
+    expect(result.buckets.codex.effectiveWindow).toBe("secondary");
+  });
+
   it("normalizes snake_case fallback data and absent reset times", () => {
     const result = normalizeUsage({
       rateLimits: {
