@@ -1,6 +1,7 @@
 # CountdownMCP
 
 [![CI](https://github.com/AlonTsur1601/CountdownMCP/actions/workflows/ci.yml/badge.svg)](https://github.com/AlonTsur1601/CountdownMCP/actions/workflows/ci.yml)
+[![M8ven Score](https://m8ven.ai/badge/mcp/alontsur1601-countdownmcp-1vb57l)](https://m8ven.ai/mcp/alontsur1601-countdownmcp-1vb57l)
 
 CountdownMCP is a local, read-only MCP server that gives Codex a plan-aware view of its remaining usage and helps it choose work that fits the current usage window.
 
