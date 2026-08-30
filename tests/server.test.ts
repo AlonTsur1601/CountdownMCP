@@ -34,9 +34,11 @@ describe("CountdownMCP server", () => {
     expect(client.getInstructions()).toContain("multiple substantial prompts");
     for (const tool of result.tools) {
       expect(tool.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false, openWorldHint: false });
+      expect(tool.inputSchema).toMatchObject({ type: "object" });
       expect(tool.description).toContain("Do not call it for small");
       expect(tool.description).toContain("more than 10 minutes");
     }
+    expect(result.tools[0].inputSchema).toMatchObject({ additionalProperties: false });
   });
 
   it("returns structured usage", async () => {

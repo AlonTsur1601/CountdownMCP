@@ -101,7 +101,7 @@ export function createServer(provider: UsageReader = new UsageProvider()): { ser
     {
       title: "Get Codex usage",
       description: "Call this once before work expected to take more than 10 minutes, require at least three meaningful execution steps, involve repeated implementation-and-test cycles, or continue across multiple substantial prompts. It returns the current Codex plan, remaining usage, reset window, credits, and limit state. Do not call it for small, self-contained tasks that can finish in one short turn.",
-      inputSchema: {},
+      inputSchema: z.object({}).strict(),
       outputSchema: usageOutputSchema,
       annotations: {
         readOnlyHint: true,
