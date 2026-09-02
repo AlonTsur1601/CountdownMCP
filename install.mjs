@@ -43,6 +43,20 @@ async function resolveCodexCommand() {
   return "codex.cmd";
 }
 
+async function resolveClaudeCommand() {
+  if (process.env.COUNTDOWN_CLAUDE_COMMAND) return process.env.COUNTDOWN_CLAUDE_COMMAND;
+  if (process.env.CLAUDE_CLI_PATH && await exists(process.env.CLAUDE_CLI_PATH)) return process.env.CLAUDE_CLI_PATH;
+  if (process.platform !== "win32") return "claude";
+  const directories = (process.env.PATH || process.env.Path || "").split(delimiter).filter(Boolean);
+  for (const filename of ["claude.cmd", "claude.exe"]) {
+    for (const directory of directories) {
+      const candidate = join(directory.replace(/^"|"$/g, ""), filename);
+      if (await exists(candidate)) return candidate;
+    }
+  }
+  return "claude.cmd";
+}
+
 function run(command, args, options = {}) {
   return new Promise((resolvePromise, reject) => {
     const isWindowsWrapper = process.platform === "win32" && command.toLowerCase().endsWith(".cmd");
@@ -102,6 +116,28 @@ async function restoreConfig(originalConfig) {
   await rename(temp, configPath);
 }
 
+// Registers CountdownMCP with Claude Code when its CLI is present on this
+// machine. This is best-effort and additive only: it never gates or rolls
+// back the Codex installation above, since a machine may have either CLI,
+// both, or neither installed.
+async function registerWithClaudeCode(scriptPath) {
+  const claudeCommand = await resolveClaudeCommand();
+  try {
+    await run(claudeCommand, ["--version"], { capture: true });
+  } catch {
+    return false;
+  }
+  try {
+    await run(claudeCommand, ["mcp", "remove", SERVER_NAME], { capture: true }).catch(() => {});
+    await run(claudeCommand, ["mcp", "add", SERVER_NAME, "--", process.execPath, scriptPath], { capture: true });
+    console.log(`CountdownMCP also registered with Claude Code as ${SERVER_NAME}. Restart Claude Code to load it.`);
+    return true;
+  } catch (error) {
+    console.error(`Claude Code detected but registration failed: ${error instanceof Error ? error.message : String(error)}`);
+    return false;
+  }
+}
+
 async function main() {
   assertSafeInstallPath(target);
   if (await nodeMajor() < 18) throw new Error("CountdownMCP requires Node.js 18 or newer.");
@@ -150,6 +186,8 @@ async function main() {
 
     await rm(backup, { recursive: true, force: true });
     console.log(`CountdownMCP installed and registered as ${SERVER_NAME}. Restart Codex to load it.`);
+
+    await registerWithClaudeCode(join(target, "dist", "server.js"));
   } catch (error) {
     await restoreConfig(originalConfig);
     if (targetSwapped) await rm(target, { recursive: true, force: true });
