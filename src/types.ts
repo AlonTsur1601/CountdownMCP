@@ -11,6 +11,9 @@ export type PlanType =
   | "enterprise_cbp_usage_based"
   | "enterprise"
   | "edu"
+  | "max"
+  | "max_5x"
+  | "max_20x"
   | "unknown";
 
 export interface RawRateLimitWindow {
@@ -94,7 +97,7 @@ export interface UsageSnapshot {
   spendControlReached: boolean | null;
   rateLimitReachedType: string | null;
   resetCreditsAvailable: number | null;
-  source: "app_server" | "session_fallback";
+  source: "app_server" | "session_fallback" | "claude_oauth";
   sampledAt: string;
   sourceTimestamp: string | null;
   stale: boolean;

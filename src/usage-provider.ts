@@ -1,4 +1,5 @@
 import { AppServerClient } from "./app-server-client.js";
+import { readClaudeOAuthUsage } from "./claude-usage-client.js";
 import { normalizeUsage } from "./normalize.js";
 import { readSessionFallback } from "./session-fallback.js";
 import type { RawRateLimitsResponse, UsageSnapshot } from "./types.js";
@@ -50,6 +51,22 @@ export class UsageProvider {
       }
     }
 
+    let claudeError: Error | null = null;
+    try {
+      const claude = await readClaudeOAuthUsage(nowMs);
+      const value = normalizeUsage(claude.raw, {
+        source: "claude_oauth",
+        nowMs,
+        sourceTimestamp: claude.timestamp,
+        stale: false,
+        primaryBucketId: "claude",
+      });
+      this.cache = { value, expiresAt: nowMs + this.cacheMs };
+      return value;
+    } catch (error) {
+      claudeError = error instanceof Error ? error : new Error(String(error));
+    }
+
     try {
       const fallback = await readSessionFallback(nowMs);
       const value = normalizeUsage(fallback.raw, {
@@ -62,7 +79,9 @@ export class UsageProvider {
       return value;
     } catch (fallbackError) {
       const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
-      throw new Error(`Unable to read Codex usage. App-server: ${appServerError?.message ?? "unknown error"} Fallback: ${fallbackMessage}`);
+      throw new Error(
+        `Unable to read usage from Codex or Claude Code. Codex app-server: ${appServerError?.message ?? "unknown error"} Claude Code: ${claudeError?.message ?? "unknown error"} Codex session fallback: ${fallbackMessage}`,
+      );
     }
   }
 

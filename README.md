@@ -14,9 +14,10 @@ Codex should skip CountdownMCP for small, self-contained, low-risk tasks that ca
 ## What it does
 
 - Reads live ChatGPT/Codex rate-limit data through the local Codex app-server.
+- Under Claude Code, reads live usage from the same endpoint the `/status` command uses, via the OAuth token Claude Code already stores locally after `claude login`. This mirrors the approach used by community tools such as `ccusage`, since Claude Code has no public CLI command or app-server RPC for this yet (tracked upstream: anthropics/claude-code#44328, #32796). The token is only read, never written back.
 - Reports plan, used and remaining percentages, all returned windows, reset time, credits, and limit state.
 - Compares the five-hour and weekly windows by estimated remaining capacity rather than treating equal percentages as equal quota. Based on measurements after the August 2026 restoration of the Plus five-hour limit, a full five-hour allowance is estimated as 16% of the weekly allowance (about 6.25 full five-hour allowances per week).
-- Falls back to the latest local rate-limit metadata when app-server access is unavailable. Fallback results are explicitly marked with their source and staleness.
+- Falls back to the latest local Codex rate-limit metadata when app-server access is unavailable. Fallback results are explicitly marked with their source and staleness. There is no equivalent local fallback for Claude Code yet, since Claude Code does not write a comparable local rate-limit snapshot.
 - Advises which ready tasks to run in normal, guarded, critical, and exhausted usage states.
 - Keeps an active, continuation-safe task eligible even at 0% remaining, because an already-running Codex turn can often continue without a new user message.
 - Uses STDIO only: no port, HTTP server, account token, or direct modification of another MCP server.
@@ -24,7 +25,8 @@ Codex should skip CountdownMCP for small, self-contained, low-risk tasks that ca
 ## Requirements
 
 - Node.js 18 or newer
-- Codex CLI available as `codex` and signed in to ChatGPT
+- For Codex: the Codex CLI available as `codex` and signed in to ChatGPT
+- For Claude Code: signed in once via `claude login` (or the desktop app), so `~/.claude/.credentials.json` holds a valid access token
 
 ## Install
 
@@ -67,7 +69,7 @@ No input. Returns structured data similar to:
 }
 ```
 
-Credits are reported separately from the plan percentage.
+Credits are reported separately from the plan percentage. `source` is `app_server` or `session_fallback` for Codex, and `claude_oauth` for Claude Code.
 
 ### `countdown_advise_work`
 
@@ -119,8 +121,9 @@ npm run smoke
 
 ## Data and security
 
-- The live path asks Codex app-server only for `account/rateLimits/read`.
-- The fallback parser returns only the `rate_limits` object and its timestamp. It never returns conversation text, authentication data, or token-usage details.
+- The Codex live path asks Codex app-server only for `account/rateLimits/read`.
+- The Codex fallback parser returns only the `rate_limits` object and its timestamp. It never returns conversation text, authentication data, or token-usage details.
+- The Claude Code path only reads the OAuth access token already stored by Claude Code and calls Anthropic's usage endpoint with it read-only; it never writes to the credentials file and never refreshes or rotates the token itself.
 - Both tools are advertised as read-only, non-destructive, closed-world, and idempotent.
 - Runtime diagnostics go to stderr; stdout is reserved for MCP protocol messages.
 

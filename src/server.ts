@@ -56,7 +56,7 @@ const usageOutputSchema = {
   spendControlReached: z.boolean().nullable(),
   rateLimitReachedType: z.string().nullable(),
   resetCreditsAvailable: z.number().int().nullable(),
-  source: z.enum(["app_server", "session_fallback"]),
+  source: z.enum(["app_server", "session_fallback", "claude_oauth"]),
   sampledAt: z.string(),
   sourceTimestamp: z.string().nullable(),
   stale: z.boolean(),

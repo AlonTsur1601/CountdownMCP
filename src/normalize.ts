@@ -11,7 +11,8 @@ import type {
 const KNOWN_PLANS = new Set<PlanType>([
   "free", "go", "plus", "pro", "prolite", "team",
   "self_serve_business_usage_based", "business", "ent26",
-  "enterprise_cbp_usage_based", "enterprise", "edu", "unknown",
+  "enterprise_cbp_usage_based", "enterprise", "edu",
+  "max", "max_5x", "max_20x", "unknown",
 ]);
 
 const FIVE_HOUR_WINDOW_MINUTES = 300;
@@ -106,16 +107,21 @@ export function normalizeUsage(
     nowMs?: number;
     sourceTimestamp?: string | null;
     stale?: boolean;
+    // Preferred bucket id to treat as the effective/top-level usage when
+    // present (falls back to the first bucket otherwise). Codex data uses
+    // "codex"; Claude Code data uses "claude".
+    primaryBucketId?: string;
   },
 ): UsageSnapshot {
   const nowMs = options.nowMs ?? Date.now();
+  const preferredId = options.primaryBucketId ?? "codex";
   const rawBuckets = raw.rateLimitsByLimitId && Object.keys(raw.rateLimitsByLimitId).length > 0
     ? raw.rateLimitsByLimitId
-    : { [raw.rateLimits.limitId ?? raw.rateLimits.limit_id ?? "codex"]: raw.rateLimits };
+    : { [raw.rateLimits.limitId ?? raw.rateLimits.limit_id ?? preferredId]: raw.rateLimits };
   const buckets = Object.fromEntries(
     Object.entries(rawBuckets).map(([id, bucket]) => [id, normalizeBucket(bucket, id, nowMs)]),
   );
-  const effectiveLimitId = buckets.codex ? "codex" : Object.keys(buckets)[0] ?? "codex";
+  const effectiveLimitId = buckets[preferredId] ? preferredId : Object.keys(buckets)[0] ?? preferredId;
   if (!buckets[effectiveLimitId]) {
     buckets[effectiveLimitId] = normalizeBucket(raw.rateLimits, effectiveLimitId, nowMs);
   }
