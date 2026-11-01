@@ -140,7 +140,9 @@ async function registerWithClaudeCode(scriptPath) {
 
 async function main() {
   assertSafeInstallPath(target);
-  if (await nodeMajor() < 18) throw new Error("CountdownMCP requires Node.js 18 or newer.");
+  if (await nodeMajor() < 22 || (await nodeMajor() === 22 && Number(process.versions.node.split(".")[1]) < 12)) {
+    throw new Error("CountdownMCP requires Node.js 22.12 or newer.");
+  }
   const codexCommand = await resolveCodexCommand();
   await run(codexCommand, ["--version"], { capture: true });
 

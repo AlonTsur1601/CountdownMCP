@@ -24,7 +24,7 @@ Codex should skip CountdownMCP for small, self-contained, low-risk tasks that ca
 
 ## Requirements
 
-- Node.js 18 or newer
+- Node.js 22.12 or newer
 - For Codex: the Codex CLI available as `codex` and signed in to ChatGPT
 - For Claude Code: signed in once via `claude login` (or the desktop app), so `~/.claude/.credentials.json` holds a valid access token
 
